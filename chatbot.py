@@ -1,39 +1,90 @@
+from telegram import Update
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, 
+                          CallbackContext)
 import configparser
 import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import redis
+from ChatGPT_HKBU import HKBU_ChatGPT
 
-# Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
 
-logger = logging.getLogger(__name__)
-
-def echo(update, context):
-    """Echo the user message."""
-    update.message.reply_text(update.message.text.upper())
-
+global redis1
 def main():
-    """Start the bot."""
     # Load your token and create an Updater for your Bot
     config = configparser.ConfigParser()
     config.read('config.ini')
-    token = config['TELEGRAM']['ACCESS_TOKEN']
+    updater = Updater(token=(config['TELEGRAM']['ACCESS_TOKEN']), use_context=True)
+    dispatcher = updater.dispatcher
+    global redis1
+    redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(config['REDIS']['PASSWORD']), port=(config['REDIS']['REDISPORT']))
+   
+    # You can set this logging module, so you will know when and why things do not work as expected Meanwhile, update your config.ini as:
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    
+    # register a dispatcher to handle message: here we register an echo dispatcher
+    # echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
+    # dispatcher.add_handler(echo_handler)
 
-    updater = Updater(token)
+    # dispatcher for chatgpt
+    global chatgpt
+    chatgpt = HKBU_ChatGPT(config)
+    chatgpt_handler = MessageHandler(Filters.text & (~Filters.command), equiped_chatgpt)
+    dispatcher.add_handler(chatgpt_handler)
 
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
-
-    # on non-command i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text & (~Filters.command), echo))
-
-    # Start the Bot
+    # on different commands - answer in Telegram
+    dispatcher.add_handler(CommandHandler("add", add))
+    dispatcher.add_handler(CommandHandler("help", help_command))
+    
+    # To start the bot:
     updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
+
+
+def echo(update, context):
+    reply_message = update.message.text.upper()
+    logging.info("Update: " + str(update))
+    logging.info("context: " + str(context))
+    context.bot.send_message(chat_id=update.effective_chat.id, text= reply_message)
+
+
+def equiped_chatgpt(update, context): 
+    # Send a "processing" message to the user
+    processing_message = context.bot.send_message(
+        chat_id=update.effective_chat.id, 
+        text="Processing your request..."
+    )
+    global chatgpt
+    reply_message = chatgpt.submit(update.message.text)
+
+    logging.info("Update: " + str(update))
+    logging.info("context: " + str(context))
+
+    context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=processing_message.message_id,
+        text=reply_message
+    )
+
+
+# Define a few command handlers. These usually take the two arguments update and
+# context. Error handlers also receive the raised TelegramError object in error.
+def help_command(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /help is issued."""
+    update.message.reply_text('Helping you helping you.')
+
+
+def add(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /add is issued."""
+    try:
+        global redis1
+        logging.info(context.args[0])
+        msg = context.args[0]   # /add keyword <-- this should store the keyword
+        redis1.incr(msg)
+        update.message.reply_text('You have said ' + msg +  ' for ' + redis1.get(msg).decode('UTF-8') + ' times.')
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /add <keyword>')
+
+
 
 if __name__ == '__main__':
     main()
