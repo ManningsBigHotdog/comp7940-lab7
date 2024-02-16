@@ -38,8 +38,6 @@ def main():
     updater.start_polling()
     updater.idle()
 
-
-
 def echo(update, context):
     reply_message = update.message.text.upper()
     logging.info("Update: " + str(update))
@@ -64,7 +62,6 @@ def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
         message_id=processing_message.message_id,
         text=reply_message
     )
-
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
@@ -94,8 +91,6 @@ def hello(update: Update, context: CallbackContext) -> None:
             update.message.reply_text('Good day!')
     except (IndexError, ValueError):
         update.message.reply_text('Good day!')
-
-
 
 if __name__ == '__main__':
     main()
