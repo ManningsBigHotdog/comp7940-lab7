@@ -47,12 +47,23 @@ def echo(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text= reply_message)
 
 
-def equiped_chatgpt(update, context): 
-    global chatgpt
+def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
+    # Send a "processing" message to the user.
+    processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
     reply_message = chatgpt.submit(update.message.text)
+
+    # Log the update and context information.
+    logging.info(f"Update: {update}")
+    logging.info(f"context: {context}")
+
     logging.info("Update: " + str(update))
     logging.info("context: " + str(context))
-    context.bot.send_message(chat_id=update.effective_chat.id, text=reply_message)
+
+    context.bot.edit_message_text(
+        chat_id=update.effective_chat.id,
+        message_id=processing_message.message_id,
+        text=reply_message
+    )
 
 
 # Define a few command handlers. These usually take the two arguments update and
