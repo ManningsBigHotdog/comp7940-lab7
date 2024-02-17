@@ -33,6 +33,7 @@ def main():
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("add", add))
     dispatcher.add_handler(CommandHandler("help", help_command))
+    dispatcher.add_handler(CommandHandler("hello", hello))
     
     # To start the bot:
     updater.start_polling()
@@ -70,16 +71,30 @@ def help_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Helping you helping you.')
 
 
+# def add(update: Update, context: CallbackContext) -> None:
+#     """Send a message when the command /add is issued."""
+#     try:
+#         global redis1
+#         logging.info(context.args[0])
+#         msg = context.args[0]   # /add keyword <-- this should store the keyword
+#         redis1.incr(msg)
+#         update.message.reply_text('You have said ' + msg +  ' for ' + redis1.get(msg).decode('UTF-8') + ' times.')
+#     except (IndexError, ValueError):
+#         update.message.reply_text('Usage: /add <keyword>')
+
 def add(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /add is issued."""
+    """Increments the counter for a given keyword."""
     try:
-        global redis1
-        logging.info(context.args[0])
-        msg = context.args[0]   # /add keyword <-- this should store the keyword
-        redis1.incr(msg)
-        update.message.reply_text('You have said ' + msg +  ' for ' + redis1.get(msg).decode('UTF-8') + ' times.')
-    except (IndexError, ValueError):
-        update.message.reply_text('Usage: /add <keyword>')
+        if context.args:
+            keyword = context.args[0]  # The keyword to increment in Redis
+            new_value = redis1.incr(keyword)
+            update.message.reply_text(f"You have mentioned '{keyword}' {new_value} times.")
+            logging.info(f"Incremented keyword '{keyword}' by 1. New value is {new_value}.")
+        else:
+            update.message.reply_text("Usage: /add <keyword>")
+    except Exception as e:
+        update.message.reply_text("An error occurred while processing your request.")
+        logging.error(f"Error in /add command: {e}")
 
 def hello(update: Update, context: CallbackContext) -> None:
     """Reply with 'Good day, <name>!' when the command /hello is issued."""
@@ -87,10 +102,13 @@ def hello(update: Update, context: CallbackContext) -> None:
         name = ' '.join(context.args)
         if name:
             update.message.reply_text(f'Good day, {name}!')
+            logging.info(f"User {update.effective_user.first_name} said hello to {name}.")
         else:
             update.message.reply_text('Good day!')
+            logging.info(f"User {update.effective_user.first_name} saßid hello.")
     except (IndexError, ValueError):
-        update.message.reply_text('Good day!')
+        update.message.reply_text('Usage: /hello <name>')
+        logging.error("Error in /hello: missing or invalid arguments.")
 
 if __name__ == '__main__':
     main()
