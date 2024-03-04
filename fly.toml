@@ -3,9 +3,6 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-[[vm]]
-  size = 'shared-cpu-1x'
-
 app = 'comp7940-lab5-23473355'
 primary_region = 'nrt'
 
