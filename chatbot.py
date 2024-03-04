@@ -43,29 +43,32 @@ def main():
     updater.idle()
 
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    message_id = update.message.message_id
+
     # Send a "processing" message to the user.
-    processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
+    context.bot.send_message(chat_id=chat_id, text="Processing your request...")
 
     # Attempt to get a response from your GPT model.
     try:
+        # Assuming chatgpt.submit method sends the user message to the GPT model and gets a response
         reply_message = chatgpt.submit(update.message.text)
         logging.info(f"GPT Response: {reply_message}")
     except Exception as e:
         logging.error(f"Error in GPT response: {e}")
         reply_message = "I'm sorry, I can't process your request right now."
 
-    # Log the update and context information.
-    logging.info(f"Update: {update}")
-    logging.info(f"context: {context}")
-
-    # Edit the original message with the actual GPT response.
+    # Edit the original "processing" message with the actual GPT response.
     try:
-        # Example of correctly using edit_message_text
-        # Assuming 'chat_id' and 'message_id' are known and 'new_text' is the new message text
-        context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_text)
+        # Assuming you want to edit the last message sent by the bot (the "processing" message)
+        # We fetch the message to edit by getting the last message in the chat with the bot
+        last_bot_message = context.bot.get_chat(chat_id).last_bot_message
+        # Then we edit that message with the GPT response
+        context.bot.edit_message_text(chat_id=chat_id, message_id=last_bot_message.message_id, text=reply_message)
     except Exception as e:
-        # Handle exception here
-        print(f"An error occurred: {e}")
+        # If there is an error while trying to edit the message, we log the error and send a new message
+        logging.error(f"An error occurred while editing the message: {e}")
+        context.bot.send_message(chat_id=chat_id, text=reply_message)
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
