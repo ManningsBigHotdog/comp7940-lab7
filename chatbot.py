@@ -34,17 +34,11 @@ def main():
     dispatcher.add_handler(CommandHandler("add", add))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("hello", hello))
+    dispatcher.add_handler(CommandHandler("echo", echo))
     
     # To start the bot:
     updater.start_polling()
     updater.idle()
-
-def echo(update, context):
-    reply_message = update.message.text.upper()
-    logging.info("Update: " + str(update))
-    logging.info("context: " + str(context))
-    context.bot.send_message(chat_id=update.effective_chat.id, text= reply_message)
-
 
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     # Send a "processing" message to the user.
@@ -69,18 +63,6 @@ def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
     update.message.reply_text('Helping you helping you.')
-
-
-# def add(update: Update, context: CallbackContext) -> None:
-#     """Send a message when the command /add is issued."""
-#     try:
-#         global redis1
-#         logging.info(context.args[0])
-#         msg = context.args[0]   # /add keyword <-- this should store the keyword
-#         redis1.incr(msg)
-#         update.message.reply_text('You have said ' + msg +  ' for ' + redis1.get(msg).decode('UTF-8') + ' times.')
-#     except (IndexError, ValueError):
-#         update.message.reply_text('Usage: /add <keyword>')
 
 def add(update: Update, context: CallbackContext) -> None:
     """Increments the counter for a given keyword."""
@@ -109,6 +91,22 @@ def hello(update: Update, context: CallbackContext) -> None:
     except (IndexError, ValueError):
         update.message.reply_text('Usage: /hello <name>')
         logging.error("Error in /hello: missing or invalid arguments.")
+
+def echo(update: Update, context: CallbackContext) -> None:
+    """Echo the user message back to them in uppercase."""
+    try:
+        # Join the arguments to form the message to echo
+        message_to_echo = ' '.join(context.args).upper() if context.args else 'You did not provide any text to echo.'
+        
+        # Send the reply message
+        update.message.reply_text(message_to_echo)
+        
+        # Log the command and the reply
+        user = update.effective_user.first_name if update.effective_user.first_name else "Unknown user"
+        logging.info(f"User {user} requested echo with message: {' '.join(context.args)}. Echoed back: {message_to_echo}.")
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /echo <text to echo>')
+        logging.error("Error in /echo: missing or invalid arguments.")
 
 if __name__ == '__main__':
     main()
