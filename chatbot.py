@@ -44,34 +44,26 @@ def main():
 
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    message_id = update.message.message_id
 
     # Send a "processing" message to the user.
-    context.bot.send_message(chat_id=chat_id, text="Processing your request...")
+    processing_message = context.bot.send_message(chat_id=chat_id, text="Processing your request...")
 
     # Attempt to get a response from your GPT model.
     try:
-        # Assuming chatgpt.submit method sends the user message to the GPT model and gets a response
         reply_message = chatgpt.submit(update.message.text)
         logging.info(f"GPT Response: {reply_message}")
     except Exception as e:
         logging.error(f"Error in GPT response: {e}")
         reply_message = "I'm sorry, I can't process your request right now."
 
-    # Edit the original "processing" message with the actual GPT response.
+    # Edit the "processing" message with the actual GPT response.
     try:
-        # Assuming you want to edit the last message sent by the bot (the "processing" message)
-        # We fetch the message to edit by getting the last message in the chat with the bot
-        last_bot_message = context.bot.get_chat(chat_id).last_bot_message
-        # Then we edit that message with the GPT response
-        context.bot.edit_message_text(chat_id=chat_id, message_id=last_bot_message.message_id, text=reply_message)
+        context.bot.edit_message_text(chat_id=chat_id, message_id=processing_message.message_id, text=reply_message)
     except Exception as e:
-        # If there is an error while trying to edit the message, we log the error and send a new message
         logging.error(f"An error occurred while editing the message: {e}")
+        # If editing the message fails, send a new message with the GPT response.
         context.bot.send_message(chat_id=chat_id, text=reply_message)
 
-# Define a few command handlers. These usually take the two arguments update and
-# context. Error handlers also receive the raised TelegramError object in error.
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
     update.message.reply_text('Helping you helping you.')
