@@ -1,4 +1,4 @@
-import os
+
 from telegram import Update
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, 
                           CallbackContext)
@@ -8,13 +8,13 @@ import redis
 from ChatGPT_HKBU import HKBU_ChatGPT
 
 
+
 global redis1
 def main():
     # Load your token and create an Updater for your Bot
     config = configparser.ConfigParser()
     config.read('config.ini')
     updater = Updater(token=(config['TELEGRAM']['ACCESS_TOKEN']), use_context=True)
-    # updater = Updater(token=os.getenv('TELEGRAM_TOKEN'), use_context=True)
     dispatcher = updater.dispatcher
     global redis1
     redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(config['REDIS']['PASSWORD']), port=(config['REDIS']['REDISPORT']))
@@ -45,15 +45,20 @@ def main():
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     # Send a "processing" message to the user.
     processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
-    reply_message = chatgpt.submit(update.message.text)
+
+    # Attempt to get a response from your GPT model.
+    try:
+        reply_message = chatgpt.submit(update.message.text)
+        logging.info(f"GPT Response: {reply_message}")
+    except Exception as e:
+        logging.error(f"Error in GPT response: {e}")
+        reply_message = "I'm sorry, I can't process your request right now."
 
     # Log the update and context information.
     logging.info(f"Update: {update}")
     logging.info(f"context: {context}")
 
-    logging.info("Update: " + str(update))
-    logging.info("context: " + str(context))
-
+    # Edit the original message with the actual GPT response.
     context.bot.edit_message_text(
         chat_id=update.effective_chat.id,
         message_id=processing_message.message_id,
