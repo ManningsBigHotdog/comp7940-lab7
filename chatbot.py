@@ -59,11 +59,13 @@ def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     logging.info(f"context: {context}")
 
     # Edit the original message with the actual GPT response.
-    context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=processing_message.message_id,
-        text=reply_message
-    )
+    try:
+        # Example of correctly using edit_message_text
+        # Assuming 'chat_id' and 'message_id' are known and 'new_text' is the new message text
+        context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_text)
+    except Exception as e:
+        # Handle exception here
+        print(f"An error occurred: {e}")
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
