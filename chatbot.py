@@ -42,26 +42,25 @@ def main():
     updater.start_polling()
     updater.idle()
 
-def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
+def equipped_chatgpt(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-
-    # Send a "processing" message to the user.
     processing_message = context.bot.send_message(chat_id=chat_id, text="Processing your request...")
 
-    # Attempt to get a response from your GPT model.
     try:
-        reply_message = chatgpt.submit(update.message.text)
+        response = chatgpt.submit(update.message.text)
+        if response.ok:
+            reply_message = response.text
+        else:
+            reply_message = "Failed to get a valid response from the GPT model."
         logging.info(f"GPT Response: {reply_message}")
     except Exception as e:
         logging.error(f"Error in GPT response: {e}")
         reply_message = "I'm sorry, I can't process your request right now."
 
-    # Edit the "processing" message with the actual GPT response.
     try:
-        context.bot.edit_message_text(chat_id=chat_id, message_id=processing_message.message_id, text=reply_message)
+        context.bot.edit_message_text(chat_id=chat_id, message_id=processing_message.message_id, text=str(reply_message))
     except Exception as e:
         logging.error(f"An error occurred while editing the message: {e}")
-        # If editing the message fails, send a new message with the GPT response.
         context.bot.send_message(chat_id=chat_id, text=reply_message)
 
 def help_command(update: Update, context: CallbackContext) -> None:
