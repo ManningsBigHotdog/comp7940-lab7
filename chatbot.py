@@ -21,10 +21,6 @@ def main():
    
     # You can set this logging module, so you will know when and why things do not work as expected Meanwhile, update your config.ini as:
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-    
-    # register a dispatcher to handle message: here we register an echo dispatcher
-    # echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
-    # dispatcher.add_handler(echo_handler)
 
     # dispatcher for chatgpt
     global chatgpt
