@@ -7,8 +7,6 @@ import logging
 import redis
 from ChatGPT_HKBU import HKBU_ChatGPT
 
-
-
 global redis1
 def main():
     # Load your token and create an Updater for your Bot
