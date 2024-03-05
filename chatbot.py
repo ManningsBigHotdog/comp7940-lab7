@@ -37,19 +37,28 @@ def main():
     updater.idle()
 
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
-    # Send a "processing" message to the user.
-    processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
-    reply_message = chatgpt.submit(update.message.text)
-
-    # Check if reply_message is an error message and handle accordingly
-    if reply_message.startswith('Error:'):
-        context.bot.send_message(chat_id=update.effective_chat.id, text=reply_message)
-    else:
-        context.bot.edit_message_text(
-            chat_id=update.effective_chat.id,
-            message_id=processing_message.message_id,
-            text=reply_message
-        )
+    try:
+        # Send a "processing" message to the user.
+        processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
+        logging.info("Sent 'Processing your request...' message to user.")
+        
+        reply_message = chatgpt.submit(update.message.text)
+        logging.info(f"Received reply from chatgpt.submit: {reply_message}")
+        
+        # Check if reply_message is an error message and handle accordingly
+        if reply_message.startswith('Error:'):
+            context.bot.send_message(chat_id=update.effective_chat.id, text=reply_message)
+        else:
+            context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=processing_message.message_id,
+                text=reply_message
+            )
+    except Exception as e:
+        logging.error(f"An exception occurred in equiped_chatgpt: {e}")
+        context.bot.send_message(chat_id=update.effective_chat.id, text="An error occurred while processing your request.")
+        # Consider also sending back the exception message:
+        # context.bot.send_message(chat_id=update.effective_chat.id, text=str(e))
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
