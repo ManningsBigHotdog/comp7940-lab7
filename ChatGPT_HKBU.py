@@ -9,7 +9,7 @@ class HKBU_ChatGPT():
         elif type(config_) == configparser.ConfigParser:
             self.config = config_
 
-    def submit(self,message):   
+    def submit(self, message):   
         conversation = [{"role": "user", "content": message}]
         url = (self.config['CHATGPT']['BASICURL']) + "/deployments/" + (self.config['CHATGPT']['MODELNAME']) + "/chat/completions/?api-version=" + (self.config['CHATGPT']['APIVERSION'])
         headers = { 'Content-Type': 'application/json', 'api-key': (self.config['CHATGPT']['ACCESS_TOKEN']) }
@@ -19,7 +19,8 @@ class HKBU_ChatGPT():
             data = response.json()
             return data['choices'][0]['message']['content']
         else:
-            return 'Error:', response
+            # Return a string error message instead of the response object
+            return f'Error: {response.status_code}, {response.reason}'
 
 
 if __name__ == '__main__':

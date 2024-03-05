@@ -43,18 +43,15 @@ def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
     reply_message = chatgpt.submit(update.message.text)
 
-    # Log the update and context information.
-    logging.info(f"Update: {update}")
-    logging.info(f"context: {context}")
-
-    logging.info("Update: " + str(update))
-    logging.info("context: " + str(context))
-
-    context.bot.edit_message_text(
-        chat_id=update.effective_chat.id,
-        message_id=processing_message.message_id,
-        text=reply_message
-    )
+    # Check if reply_message is an error message and handle accordingly
+    if reply_message.startswith('Error:'):
+        context.bot.send_message(chat_id=update.effective_chat.id, text=reply_message)
+    else:
+        context.bot.edit_message_text(
+            chat_id=update.effective_chat.id,
+            message_id=processing_message.message_id,
+            text=reply_message
+        )
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
