@@ -9,7 +9,7 @@ from ChatGPT_HKBU import HKBU_ChatGPT
 
 global redis1
 def main():
-    # Load your token and create an Updater for your Bot
+    # Load token 
     config = configparser.ConfigParser()
     config.read('config.ini')
     # updater = Updater(token=(config['TELEGRAM']['ACCESS_TOKEN']), use_context=True)
@@ -19,7 +19,6 @@ def main():
     # redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(config['REDIS']['PASSWORD']), port=(config['REDIS']['REDISPORT']))
     redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(os.environ.get('REDIS_PASSWORD')), port=(config['REDIS']['REDISPORT']))
    
-    # You can set this logging module, so you will know when and why things do not work as expected Meanwhile, update your config.ini as:
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
     # dispatcher for chatgpt
@@ -40,14 +39,12 @@ def main():
 
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     try:
-        # Send a "processing" message to the user.
         processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
-        logging.info("Sent 'Processing your request...' message to user.")
+        logging.info(f"Received prompt {processing_message}, Sent 'Processing your request...' message to user.")
         
         reply_message = chatgpt.submit(update.message.text)
         logging.info(f"Received reply from chatgpt.submit: {reply_message}")
         
-        # Check if reply_message is an error message and handle accordingly
         if reply_message.startswith('Error:'):
             context.bot.send_message(chat_id=update.effective_chat.id, text=reply_message)
         else:
@@ -59,8 +56,6 @@ def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     except Exception as e:
         logging.error(f"An exception occurred in equiped_chatgpt: {e}")
         context.bot.send_message(chat_id=update.effective_chat.id, text="An error occurred while processing your request.")
-        # Consider also sending back the exception message:
-        # context.bot.send_message(chat_id=update.effective_chat.id, text=str(e))
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
@@ -70,7 +65,7 @@ def add(update: Update, context: CallbackContext) -> None:
     """Increments the counter for a given keyword."""
     try:
         if context.args:
-            keyword = context.args[0]  # The keyword to increment in Redis
+            keyword = context.args[0]
             new_value = redis1.incr(keyword)
             update.message.reply_text(f"You have mentioned '{keyword}' {new_value} times.")
             logging.info(f"Incremented keyword '{keyword}' by 1. New value is {new_value}.")
@@ -97,13 +92,8 @@ def hello(update: Update, context: CallbackContext) -> None:
 def echo(update: Update, context: CallbackContext) -> None:
     """Echo the user message back to them in uppercase."""
     try:
-        # Join the arguments to form the message to echo
         message_to_echo = ' '.join(context.args).upper() if context.args else 'You did not provide any text to echo.'
-        
-        # Send the reply message
         update.message.reply_text(message_to_echo)
-        
-        # Log the command and the reply
         user = update.effective_user.first_name if update.effective_user.first_name else "Unknown user"
         logging.info(f"User {user} requested echo with message: {' '.join(context.args)}. Echoed back: {message_to_echo}.")
     except (IndexError, ValueError):
