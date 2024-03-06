@@ -40,7 +40,7 @@ def main():
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     try:
         processing_message = context.bot.send_message(chat_id=update.effective_chat.id, text="Processing your request...")
-        logging.info(f"Received prompt {processing_message}, Sent 'Processing your request...' message to user.")
+        logging.info(f"Received prompt {{ {update.message.text} }}, Sent 'Processing your request...' message to user.")
         
         reply_message = chatgpt.submit(update.message.text)
         logging.info(f"Received reply from chatgpt.submit: {reply_message}")
