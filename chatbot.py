@@ -2,7 +2,7 @@ import os
 from telegram import Update
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, 
                           CallbackContext)
-import configparser
+# import configparser
 import logging
 import redis
 from ChatGPT_HKBU import HKBU_ChatGPT
@@ -17,7 +17,7 @@ def main():
     dispatcher = updater.dispatcher
     global redis1
     # redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(config['REDIS']['PASSWORD']), port=(config['REDIS']['REDISPORT']))
-    redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(os.environ.get('REDIS_PASSWORD')), port=(config['REDIS']['REDISPORT']))
+    redis1 = redis.Redis(host=(os.environ.get('REDIS_HOST')), password=(os.environ.get('REDIS_PASSWORD')), port=(os.environ.get('REDIS_PORT')))
    
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 

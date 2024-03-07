@@ -1,5 +1,5 @@
 import os
-import configparser
+# import configparser
 import requests
 
 class HKBU_ChatGPT():
@@ -12,7 +12,8 @@ class HKBU_ChatGPT():
 
     def submit(self, message):   
         conversation = [{"role": "user", "content": message}]
-        url = (self.config['CHATGPT']['BASICURL']) + "/deployments/" + (self.config['CHATGPT']['MODELNAME']) + "/chat/completions/?api-version=" + (self.config['CHATGPT']['APIVERSION'])
+        url = (os.environ.get('BASICURL')) + "/deployments/" + (os.environ.get('MODELNAME')) + "/chat/completions/?api-version=" + (os.environ.get('APIVERSION'))
+        # url = (self.config['CHATGPT']['BASICURL']) + "/deployments/" + (self.config['CHATGPT']['MODELNAME']) + "/chat/completions/?api-version=" + (self.config['CHATGPT']['APIVERSION'])
         headers = { 'Content-Type': 'application/json', 'api-key': (os.environ.get('GPT_ACCESS_TOKEN')) }
         # headers = { 'Content-Type': 'application/json', 'api-key': (self.config['CHATGPT']['ACCESS_TOKEN']) }
         payload = { 'messages': conversation }
