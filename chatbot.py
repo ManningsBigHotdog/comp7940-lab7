@@ -1,41 +1,26 @@
 import os
-from telegram import Update
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, 
-                          CallbackContext)
-# import configparser
+from telegram import Update, Bot
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import logging
 import redis
 from ChatGPT_HKBU import HKBU_ChatGPT
 
-global redis1
-def main():
-    # Load token 
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    # updater = Updater(token=(config['TELEGRAM']['ACCESS_TOKEN']), use_context=True)
-    updater = Updater(token=(os.environ.get('TG_ACCESS_TOKEN')), use_context=True)
-    dispatcher = updater.dispatcher
-    global redis1
-    # redis1 = redis.Redis(host=(config['REDIS']['HOST']), password=(config['REDIS']['PASSWORD']), port=(config['REDIS']['REDISPORT']))
-    redis1 = redis.Redis(host=(os.environ.get('REDIS_HOST')), password=(os.environ.get('REDIS_PASSWORD')), port=(os.environ.get('REDIS_PORT')))
-   
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+# Initialize logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-    # dispatcher for chatgpt
-    global chatgpt
-    chatgpt = HKBU_ChatGPT(config)
-    chatgpt_handler = MessageHandler(Filters.text & (~Filters.command), equiped_chatgpt)
-    dispatcher.add_handler(chatgpt_handler)
+redis1 = redis.Redis(
+    host=os.environ.get('REDIS_HOST'),
+    password=os.environ.get('REDIS_PASSWORD'),
+    port=os.environ.get('REDIS_PORT'),
+    decode_responses=True 
+)
 
-    # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler("add", add))
-    dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("hello", hello))
-    dispatcher.add_handler(CommandHandler("echo", echo))
-    
-    # To start the bot:
-    updater.start_polling()
-    updater.idle()
+# Create a global ChatGPT object
+chatgpt = HKBU_ChatGPT()
+
+# Initialize the Telegram bot
+updater = Updater(token=os.environ.get('TG_ACCESS_TOKEN'), use_context=True)
+dispatcher = updater.dispatcher
 
 def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
     try:
@@ -58,11 +43,9 @@ def equiped_chatgpt(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="An error occurred while processing your request.")
 
 def help_command(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
     update.message.reply_text('Helping you helping you.')
 
 def add(update: Update, context: CallbackContext) -> None:
-    """Increments the counter for a given keyword."""
     try:
         if context.args:
             keyword = context.args[0]
@@ -76,7 +59,6 @@ def add(update: Update, context: CallbackContext) -> None:
         logging.error(f"Error in /add command: {e}")
 
 def hello(update: Update, context: CallbackContext) -> None:
-    """Reply with 'Good day, <name>!' when the command /hello is issued."""
     try:
         name = ' '.join(context.args)
         if name:
@@ -84,13 +66,12 @@ def hello(update: Update, context: CallbackContext) -> None:
             logging.info(f"User {update.effective_user.first_name} said hello to {name}.")
         else:
             update.message.reply_text('Good day!')
-            logging.info(f"User {update.effective_user.first_name} saßid hello.")
+            logging.info(f"User {update.effective_user.first_name} said hello.")
     except (IndexError, ValueError):
         update.message.reply_text('Usage: /hello <name>')
         logging.error("Error in /hello: missing or invalid arguments.")
 
 def echo(update: Update, context: CallbackContext) -> None:
-    """Echo the user message back to them in uppercase."""
     try:
         message_to_echo = ' '.join(context.args).upper() if context.args else 'You did not provide any text to echo.'
         update.message.reply_text(message_to_echo)
@@ -99,6 +80,17 @@ def echo(update: Update, context: CallbackContext) -> None:
     except (IndexError, ValueError):
         update.message.reply_text('Usage: /echo <text to echo>')
         logging.error("Error in /echo: missing or invalid arguments.")
+
+# dispatcher
+dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), equiped_chatgpt))
+dispatcher.add_handler(CommandHandler("add", add))
+dispatcher.add_handler(CommandHandler("help", help_command))
+dispatcher.add_handler(CommandHandler("hello", hello))
+dispatcher.add_handler(CommandHandler("echo", echo))
+
+def main():
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == '__main__':
     main()
